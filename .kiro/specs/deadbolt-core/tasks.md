@@ -4,7 +4,7 @@ This task list is consumed by Kiro's Spec-driven development engine.
 
 ---
 
-- [ ] **Task 1: Core Cryptographic Sharding Engine**
+- [x] **Task 1: Core Cryptographic Sharding Engine**
   - Implement AES-256-GCM symmetric encryption/decryption utilities.
   - Implement 2-of-3 Shamir's Secret Sharing (SSS) key splitter and reconstructor.
   - Write unit tests verifying: $K = \text{combine}(S_1, S_2) = \text{combine}(S_1, S_3) = \text{combine}(S_2, S_3)$.
@@ -28,3 +28,4 @@ This task list is consumed by Kiro's Spec-driven development engine.
 
 - [ ] **Task 5: Kiro Agent Hooks & CI Integration**
   - Configure `.kiro/hooks/` to run cryptographic property tests whenever state transition code is edited.
+

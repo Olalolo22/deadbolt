@@ -26,3 +26,4 @@ The heartbeat state machine must follow this strict monotonic sequence:
 - **Non-Repudiation:** Heartbeat check-in tokens must be signed or hashed with single-use nonces to prevent replay attacks.
 - **Heir Verification:** The release of encrypted shards or funds is strictly gated to the pre-registered heir public key or verified claimant token.
 - **Fail-Safe Immutability:** Once state transitions to `DECEASED_RELEASED`, the transition is permanent and non-reversible to prevent post-mortem inheritance tampering.
+

@@ -49,3 +49,4 @@
    - $S_2$: Delivered to Heir upon initial vault creation (as a dormant recovery token).
    - $S_3$: Printed / stored offline as paper cold backup.
 3. **Reconstruction:** When the owner passes away, $S_1$ becomes public on the claimant portal. Heir supplies $S_2$, reconstructs $K = \text{combine}(S_1, S_2)$, and decrypts the payload client-side in their browser.
+

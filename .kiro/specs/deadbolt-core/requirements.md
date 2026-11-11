@@ -37,3 +37,4 @@ DeadBolt bridges traditional fiduciary trust law with autonomous cryptographic r
 - **FR-4.1:** If grace period expires with zero owner intervention, state permanently transitions to `DECEASED_RELEASED`.
 - **FR-4.2:** Shard 1 is published to the claimant portal.
 - **FR-4.3:** Designated heir combines Shard 1 + Shard 2 client-side, decrypts the master payload, and claims the assets.
+

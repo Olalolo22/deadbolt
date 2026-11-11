@@ -44,3 +44,4 @@ cd deadbolt
 kiro .
 ```
 Kiro will automatically detect `/.kiro/specs/` and load the spec workflow directly into your editor!
+
