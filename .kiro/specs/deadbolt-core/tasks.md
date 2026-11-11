@@ -19,7 +19,7 @@ This task list is consumed by Kiro's Spec-driven development engine.
   - Write property-based tests verifying the **Zero Early Release** invariant: no combination of ticks or missed pings prior to `grace_period_end` can expose Shard 1.
   - Verify that an owner check-in during `GRACE_PERIOD` immediately reverts state to `ACTIVE`.
 
-- [ ] **Task 4: CLI & Interactive Demonstration Surface**
+- [x] **Task 4: CLI & Interactive Demonstration Surface**
   - Build a high-impact terminal CLI / simulation script:
     - `deadbolt init`: Creates a new vault, encrypts payload, and outputs Shard 2 to heir.
     - `deadbolt checkin`: Authenticated owner check-in simulating health status.
