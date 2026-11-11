@@ -26,6 +26,6 @@ This task list is consumed by Kiro's Spec-driven development engine.
     - `deadbolt fast-forward --days 45`: Fast-forwards simulation clock to demonstrate missed pings and grace period.
     - `deadbolt claim`: Heir submits Shard 2 and receives decrypted testament/funds.
 
-- [ ] **Task 5: Kiro Agent Hooks & CI Integration**
+- [x] **Task 5: Kiro Agent Hooks & CI Integration**
   - Configure `.kiro/hooks/` to run cryptographic property tests whenever state transition code is edited.
 

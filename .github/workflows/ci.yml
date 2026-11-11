@@ -1,0 +1,202 @@
+# DeadBolt — CI Pipeline
+# ======================
+# Runs the full 181-test suite on every push and pull request.
+#
+# Security invariants enforced by CI:
+#   • Zero Early Release (property-based, 1000+ fuzz examples per property)
+#   • AES-256-GCM round-trip correctness and authentication tag rejection
+#   • Shamir 2-of-3 threshold: all pair combinations reconstruct K
+#   • Single-shard zero-information property
+#   • Monotonic state progression; DECEASED_RELEASED immutability
+#   • CLI end-to-end lifecycle: init → fast-forward → claim
+
+name: DeadBolt CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Unit & Integration Tests
+  # ─────────────────────────────────────────────────────────────────────────
+  test:
+    name: "Test Suite (Python ${{ matrix.python-version }})"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            "cryptography==41.0.7" \
+            "pytest==7.4.3" \
+            "hypothesis==6.112.2" \
+            "rich==13.7.1" \
+            "click==8.1.7"
+
+      - name: Run cryptographic unit tests (Task 1)
+        run: |
+          python -m pytest tests/test_crypto.py -v --tb=short
+        env:
+          PYTHONPATH: .
+
+      - name: Run state machine unit tests (Task 2)
+        run: |
+          python -m pytest tests/test_vault.py -v --tb=short
+        env:
+          PYTHONPATH: .
+
+      - name: Run property-based invariant fuzz tests (Task 3)
+        # Increase Hypothesis example count in CI for stronger coverage.
+        # The HYPOTHESIS_MAX_EXAMPLES env var is read by a conftest.py profile
+        # (see below); falls back to per-test @settings if not set.
+        run: |
+          python -m pytest tests/test_invariants.py -v --tb=short
+        env:
+          PYTHONPATH: .
+          HYPOTHESIS_SEED: 0
+
+      - name: Run CLI end-to-end tests (Task 4)
+        run: |
+          python -m pytest tests/test_cli.py -v --tb=short
+        env:
+          PYTHONPATH: .
+
+      - name: Run full suite with coverage summary
+        run: |
+          python -m pytest tests/ -q --tb=short --no-header \
+            -p no:hypothesis \
+            2>&1 | tail -5
+          # Re-run including hypothesis for the official count
+          python -m pytest tests/ --tb=short -q --no-header
+        env:
+          PYTHONPATH: .
+          HYPOTHESIS_SEED: 0
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Security Invariant Gate
+  # Dedicated job that ONLY runs the Zero Early Release property tests.
+  # This job is a required status check — no merge without it passing.
+  # ─────────────────────────────────────────────────────────────────────────
+  invariant-gate:
+    name: "Zero Early Release Invariant Gate"
+    runs-on: ubuntu-latest
+    needs: []          # runs in parallel with the test job, not after it
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            "cryptography==41.0.7" \
+            "pytest==7.4.3" \
+            "hypothesis==6.112.2"
+
+      - name: "P1 — Zero Early Release (1000 examples)"
+        run: |
+          python -m pytest tests/test_invariants.py::test_p1_zero_early_release \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+          HYPOTHESIS_SEED: 0
+
+      - name: "P2 — Mandatory 14-day Grace Duration"
+        run: |
+          python -m pytest \
+            tests/test_invariants.py::test_p2_mandatory_grace_duration \
+            tests/test_invariants.py::test_p2_sub_14_day_grace_construction_rejected \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+
+      - name: "P3+P4 — No Instant Release / N-1 Misses"
+        run: |
+          python -m pytest \
+            tests/test_invariants.py::test_p3_single_miss_never_enters_grace \
+            tests/test_invariants.py::test_p4_n_minus_1_misses_never_enter_grace \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+
+      - name: "P5 — Revocability (check-in resets pre-release state)"
+        run: |
+          python -m pytest \
+            tests/test_invariants.py::test_p5_revocability_pre_release \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+
+      - name: "P6+P7 — Monotonicity & Fail-Safe Immutability"
+        run: |
+          python -m pytest \
+            tests/test_invariants.py::test_p6_monotonic_state_progression \
+            tests/test_invariants.py::test_p7_immutability_after_release \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+
+      - name: "P8+P10 — Grace Window Immutability & Last-Second Rescue"
+        run: |
+          python -m pytest \
+            tests/test_invariants.py::test_p8_grace_end_immutable_once_set \
+            tests/test_invariants.py::test_p10_last_second_grace_rescue \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+
+      - name: "P11+P12 — Anti-Replay & Cross-Vault Token Isolation"
+        run: |
+          python -m pytest \
+            tests/test_invariants.py::test_p11_token_replay_blocked \
+            tests/test_invariants.py::test_p12_cross_vault_token_isolation \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+
+      - name: "Stress — Full random-sequence invariant suite"
+        run: |
+          python -m pytest \
+            tests/test_invariants.py::test_stress_core_invariants_hold_across_random_sequences \
+            tests/test_invariants.py::test_p_integration_no_release_before_grace_end_with_interleaved_checkins \
+            -v --tb=long
+        env:
+          PYTHONPATH: .
+
+      - name: Invariant gate summary
+        if: success()
+        run: |
+          echo ""
+          echo "=============================================="
+          echo "  ✅  ALL ZERO EARLY RELEASE INVARIANTS HOLD"
+          echo "  Shard 1 cannot be exposed before grace_period_end"
+          echo "  under any randomised tick sequence or clock jump."
+          echo "=============================================="

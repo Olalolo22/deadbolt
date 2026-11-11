@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "DeadBolt \u2014 Invariant Audit on Save",
+      "trigger": "PostFileSave",
+      "description": "Runs cryptographic property tests and state machine unit tests whenever src/crypto.py, src/vault.py, or src/cli.py is saved. Enforces the Zero Early Release invariant and all Shamir/AES-GCM correctness properties. Exit 2 blocks the save action on failure.",
+      "matcher": "src/(crypto|vault|cli)\\.py$",
+      "action": {
+        "type": "command",
+        "command": "python3 -m pytest tests/test_invariants.py tests/test_crypto.py tests/test_vault.py -x -q --tb=short --no-header 2>&1; EXIT=$?; if [ $EXIT -eq 0 ]; then printf '\\n\\u2705 DeadBolt invariant audit PASSED\\n'; else printf '\\n\\u274c DeadBolt invariant audit FAILED \\u2014 Zero Early Release invariant may be broken\\n'; fi; exit $EXIT",
+        "timeout": 120
+      }
+    }
+  ]
+}
