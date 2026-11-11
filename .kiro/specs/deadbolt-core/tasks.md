@@ -10,7 +10,7 @@ This task list is consumed by Kiro's Spec-driven development engine.
   - Write unit tests verifying: $K = \text{combine}(S_1, S_2) = \text{combine}(S_1, S_3) = \text{combine}(S_2, S_3)$.
   - Verify that a single shard reveals zero information about $K$.
 
-- [ ] **Task 2: Heartbeat State Machine Engine**
+- [x] **Task 2: Heartbeat State Machine Engine**
   - Implement the `HeartbeatVault` data model with timestamps, intervals, and state enums.
   - Implement state transition methods: `record_checkin()`, `tick()`, `trigger_grace()`, `finalize_release()`.
   - Enforce monotonic state rules and immutability once `DECEASED_RELEASED`.
