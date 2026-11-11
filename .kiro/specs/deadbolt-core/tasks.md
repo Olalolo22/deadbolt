@@ -15,7 +15,7 @@ This task list is consumed by Kiro's Spec-driven development engine.
   - Implement state transition methods: `record_checkin()`, `tick()`, `trigger_grace()`, `finalize_release()`.
   - Enforce monotonic state rules and immutability once `DECEASED_RELEASED`.
 
-- [ ] **Task 3: Invariant Fuzzing & Property Tests**
+- [x] **Task 3: Invariant Fuzzing & Property Tests**
   - Write property-based tests verifying the **Zero Early Release** invariant: no combination of ticks or missed pings prior to `grace_period_end` can expose Shard 1.
   - Verify that an owner check-in during `GRACE_PERIOD` immediately reverts state to `ACTIVE`.
 
